@@ -30,6 +30,7 @@ array[j] = array[j - gap];
 }
 if (array[j] != aux)
 array[j] = aux;
+
 }
 print_array(array, size);
 }

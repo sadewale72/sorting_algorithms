@@ -42,7 +42,6 @@ count = malloc(sizeof(int) * (max + 1));
 if (count == NULL)
 {
 	free(sorted);
-	return;
 }
 
 for (i = 0; i < (max + 1); i++)

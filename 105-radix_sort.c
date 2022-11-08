@@ -1,126 +1,82 @@
 #include "sort.h"
 
-/**
- * get_max - get the maximum value of an array of integers
- *
- * @array: array from which to get the maximum value
- * @size: size of the array
- *
- * Return: the maximum value of array
- */
-static int get_max(int *array, size_t size)
-{
-size_t index = 0;
-int max = 0;
+int get_max(int *array, int size);
+void radix_counting_sort(int *array, size_t size, int sig, int *buff);
+void radix_sort(int *array, size_t size);
 
-while (index < size)
+/**
+ * get_max - Get the maximum value in an array of integers.
+ * @array: An array of integers.
+ * @size: The size of the array.
+ *
+ * Return: The maximum integer in the array.
+ */
+int get_max(int *array, int size)
 {
-if (array[index] > max)
-max = array[index];
-index += 1;
+int max, i;
+
+for (max = array[0], i = 1; i < size; i++)
+{
+if (array[i] > max)
+max = array[i];
 }
 return (max);
 }
 
 /**
- * list_push - push a value onto the end of a list of integers
- *
- * @list: pointer to the list of integers to which to push the value
- * @n: the value to push into the list
+ * radix_counting_sort - Sort the significant digits of an array of integers
+ *			 in ascending order using the counting sort algorithm.
+ * @array: An array of integers.
+ * @size: The size of the array.
+ * @sig: The significant digit to sort on.
+ * @buff: A buffer to store the sorted array.
  */
-static void list_push(listint_t **list, int n)
+void radix_counting_sort(int *array, size_t size, int sig, int *buff)
 {
-listint_t *last = *list;
-listint_t *node = malloc(sizeof(listint_t));
+int count[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+size_t i;
 
-node->n = n;
+for (i = 0; i < size; i++)
+count[(array[i] / sig) % 10] += 1;
 
-if (last)
+for (i = 0; i < 10; i++)
+count[i] += count[i - 1];
+
+for (i = size - 1; (int)i >= 0; i--)
 {
-while (last->next)
-last = last->next;
-node->next = NULL;
-node->prev = last;
-last->next = node;
+buff[count[(array[i] / sig) % 10] - 1] = array[i];
+count[(array[i] / sig) % 10] -= 1;
 }
-else
-{
-node->next = NULL;
-node->prev = NULL;
-*list = node;
-}
+
+for (i = 0; i < size; i++)
+array[i] = buff[i];
 }
 
 /**
- * list_pop - pop the first value from a list of integers
+ * radix_sort - Sort an array of integers in ascending
+ *		order using the radix sort algorithm.
+ * @array: An array of integers.
+ * @size: The size of the array.
  *
- * @list: pointer to the list of integers from which to pop a value
- *
- * Return: the first value in a list of integers
- */
-static int list_pop(listint_t **list)
-{
-listint_t *node = *list;
-int n = node->n;
-
-*list = node->next;
-free(node);
-return (n);
-}
-
-/**
- * alloc_buckets - dynamically allocate buckets for each digit
- *
- * @array: array of integers to be sorted
- * @size: number of elements in the array to be sorted
- * @factor: factor of digit on which to sort
- * @buckets: pointer to array of pointers to buckets
- */
-static void alloc_buckets(
-	const int *array, size_t size, int factor, listint_t *(*buckets)[10]
-)
-{
-int n = 0;
-size_t index = 0;
-size_t bucket = 0;
-
-while (index < size)
-{
-n = array[index++];
-bucket = (n / factor) % 10;
-list_push(&(*buckets)[bucket], n);
-}
-}
-
-/**
- * radix_sort - sort an array of integers using the LSD radix sort algorithm
- *
- * @array: array of integers to be sorted
- * @size: number of elements in the array to be sorted
+ * Description: Implements the LSD radix sort algorithm. Prints
+ * the array after each significant digit increase.
  */
 void radix_sort(int *array, size_t size)
 {
-listint_t *buckets[10] = {0};
-size_t bucket = 0;
-size_t index = 0;
-int max = 0;
-int factor = 1;
+int max, sig, *buff;
 
-if (array && size > 1)
+if (array == NULL || size < 2)
+return;
+
+buff = malloc(sizeof(int) * size);
+if (buff == NULL)
+return;
+
+max = get_max(array, size);
+for (sig = 1; max / sig > 0; sig *= 10)
 {
-for (max = get_max(array, size); max / factor; factor *= 10)
-{
-alloc_buckets(array, size, factor, &buckets);
-for (bucket = 0, index = 0; bucket < 10; bucket += 1)
-{
-while (buckets[bucket])
-{
-array[index++] = list_pop(
-&buckets[bucket]
-);
-}
-}
+radix_counting_sort(array, size, sig, buff);
 print_array(array, size);
 }
-}
+free(buff);
 }
